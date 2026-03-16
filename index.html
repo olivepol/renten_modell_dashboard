@@ -1,1353 +1,824 @@
-diff --git a/c:\Users\olive\OneDrive\Dokumente\Arbeit\Bewerbungen\BMAS\Referent Renten\renten_modell_dashboard\dashboard_d3.html b/c:\Users\olive\OneDrive\Dokumente\Arbeit\Bewerbungen\BMAS\Referent Renten\renten_modell_dashboard\dashboard_d3.html
-new file mode 100644
---- /dev/null
-+++ b/c:\Users\olive\OneDrive\Dokumente\Arbeit\Bewerbungen\BMAS\Referent Renten\renten_modell_dashboard\dashboard_d3.html
-@@ -0,0 +1,1348 @@
-+<!doctype html>
-+<html lang="de">
-+<head>
-+  <meta charset="utf-8">
-+  <meta name="viewport" content="width=device-width, initial-scale=1">
-+  <title>Rentenmodell Dashboard - D3.js</title>
-+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-+  <style>
-+    :root {
-+      --bg: #f3f1eb;
-+      --panel: rgba(255, 252, 246, 0.92);
-+      --panel-strong: #fffdfa;
-+      --text: #1f2933;
-+      --muted: #5b6675;
-+      --line-1: #0f766e;
-+      --line-2: #b45309;
-+      --line-3: #1d4ed8;
-+      --line-4: #be123c;
-+      --line-5: #7c3aed;
-+      --line-6: #0f172a;
-+      --ok: #15803d;
-+      --bad: #b91c1c;
-+      --warn: #b45309;
-+      --grid: #d8dfeb;
-+      --shadow: 0 18px 44px rgba(23, 30, 44, 0.12);
-+      --radius: 18px;
-+    }
-+
-+    * { box-sizing: border-box; }
-+
-+    body {
-+      margin: 0;
-+      font-family: "Aptos", "Segoe UI Variable", "Bahnschrift", "Segoe UI", sans-serif;
-+      color: var(--text);
-+      background:
-+        radial-gradient(1200px 700px at 5% -10%, rgba(104, 211, 203, 0.24), transparent 58%),
-+        radial-gradient(1000px 600px at 100% -20%, rgba(251, 191, 36, 0.18), transparent 54%),
-+        linear-gradient(180deg, #f8f5ee 0%, #f1efe8 100%);
-+    }
-+
-+    .app {
-+      max-width: 1480px;
-+      margin: 0 auto;
-+      padding: 24px;
-+      display: grid;
-+      grid-template-columns: 340px 1fr;
-+      gap: 18px;
-+    }
-+
-+    .panel {
-+      background: var(--panel);
-+      border: 1px solid rgba(206, 214, 224, 0.8);
-+      border-radius: var(--radius);
-+      box-shadow: var(--shadow);
-+      backdrop-filter: blur(12px);
-+    }
-+
-+    .controls {
-+      padding: 18px;
-+      position: sticky;
-+      top: 18px;
-+      align-self: start;
-+      max-height: calc(100vh - 36px);
-+      overflow-y: auto;
-+    }
-+
-+    .controls h1 {
-+      margin: 0;
-+      font-size: 1.35rem;
-+      line-height: 1.2;
-+    }
-+
-+    .sub {
-+      margin: 8px 0 14px;
-+      color: var(--muted);
-+      font-size: 0.95rem;
-+      line-height: 1.45;
-+    }
-+
-+    .preset-row {
-+      display: grid;
-+      grid-template-columns: repeat(2, minmax(0, 1fr));
-+      gap: 8px;
-+      margin-bottom: 14px;
-+    }
-+
-+    button {
-+      border: 1px solid #d7dee8;
-+      background: #fffdfa;
-+      color: #1f2937;
-+      border-radius: 12px;
-+      padding: 10px 12px;
-+      font: inherit;
-+      cursor: pointer;
-+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
-+    }
-+
-+    button:hover {
-+      transform: translateY(-1px);
-+      box-shadow: 0 10px 18px rgba(21, 28, 45, 0.08);
-+      border-color: #aab6ca;
-+    }
-+
-+    .group-title {
-+      margin: 16px 0 8px;
-+      font-weight: 700;
-+      font-size: 0.95rem;
-+      color: #111827;
-+      border-bottom: 1px solid #e6e9f0;
-+      padding-bottom: 6px;
-+    }
-+
-+    .ctrl {
-+      margin-bottom: 12px;
-+    }
-+
-+    .ctrl label {
-+      display: flex;
-+      justify-content: space-between;
-+      gap: 8px;
-+      font-size: 0.88rem;
-+      color: #1f2937;
-+      margin-bottom: 4px;
-+    }
-+
-+    .ctrl output {
-+      color: #111827;
-+      font-weight: 700;
-+      white-space: nowrap;
-+    }
-+
-+    .ctrl-hint {
-+      font-size: 0.75rem;
-+      color: #6b7280;
-+      margin-top: 3px;
-+      line-height: 1.35;
-+    }
-+
-+    input[type="range"] {
-+      width: 100%;
-+      accent-color: #0f766e;
-+      cursor: pointer;
-+    }
-+
-+    .main {
-+      display: grid;
-+      grid-template-rows: auto auto auto auto;
-+      gap: 14px;
-+    }
-+
-+    .hero {
-+      padding: 20px;
-+      display: grid;
-+      gap: 14px;
-+    }
-+
-+    .hero-top {
-+      display: grid;
-+      grid-template-columns: 1.5fr 1fr;
-+      gap: 14px;
-+      align-items: start;
-+    }
-+
-+    .hero h2 {
-+      margin: 0;
-+      font-size: 1.6rem;
-+      line-height: 1.15;
-+      letter-spacing: -0.02em;
-+    }
-+
-+    .hero p {
-+      margin: 0;
-+      color: var(--muted);
-+      line-height: 1.5;
-+    }
-+
-+    .scenario-box {
-+      background: linear-gradient(135deg, rgba(15, 118, 110, 0.09), rgba(29, 78, 216, 0.06));
-+      border: 1px solid rgba(131, 147, 171, 0.35);
-+      border-radius: 16px;
-+      padding: 14px;
-+      min-height: 100%;
-+    }
-+
-+    .scenario-box .eyebrow {
-+      font-size: 0.76rem;
-+      text-transform: uppercase;
-+      letter-spacing: 0.08em;
-+      color: var(--muted);
-+      margin-bottom: 6px;
-+    }
-+
-+    .scenario-title {
-+      font-size: 1.05rem;
-+      font-weight: 700;
-+      margin-bottom: 4px;
-+    }
-+
-+    .scenario-text {
-+      font-size: 0.9rem;
-+      color: var(--muted);
-+      line-height: 1.45;
-+    }
-+
-+    .status-strip {
-+      display: grid;
-+      grid-template-columns: repeat(3, minmax(0, 1fr));
-+      gap: 10px;
-+    }
-+
-+    .status-card {
-+      background: var(--panel-strong);
-+      border: 1px solid #e6ebf3;
-+      border-radius: 14px;
-+      padding: 12px;
-+    }
-+
-+    .status-label {
-+      font-size: 0.76rem;
-+      text-transform: uppercase;
-+      letter-spacing: 0.06em;
-+      color: var(--muted);
-+      margin-bottom: 6px;
-+    }
-+
-+    .status-value {
-+      font-size: 1.02rem;
-+      font-weight: 700;
-+      margin-bottom: 3px;
-+    }
-+
-+    .status-note {
-+      font-size: 0.84rem;
-+      color: var(--muted);
-+      line-height: 1.35;
-+    }
-+
-+    .kpis {
-+      display: grid;
-+      grid-template-columns: repeat(4, minmax(0, 1fr));
-+      gap: 10px;
-+    }
-+
-+    .kpi {
-+      background: #fffdfa;
-+      border: 1px solid #e4eaf4;
-+      border-radius: 14px;
-+      padding: 12px;
-+    }
-+
-+    .kpi .label {
-+      font-size: 0.78rem;
-+      color: var(--muted);
-+      margin-bottom: 2px;
-+    }
-+
-+    .kpi .value {
-+      font-size: 1.08rem;
-+      font-weight: 700;
-+      color: #111827;
-+    }
-+
-+    .kpi .delta {
-+      font-size: 0.8rem;
-+      margin-top: 3px;
-+      font-weight: 600;
-+    }
-+
-+    .delta.ok { color: var(--ok); }
-+    .delta.bad { color: var(--bad); }
-+    .delta.warn { color: var(--warn); }
-+
-+    .chart-grid {
-+      display: grid;
-+      grid-template-columns: repeat(2, minmax(0, 1fr));
-+      gap: 12px;
-+    }
-+
-+    .chart-card {
-+      padding: 14px;
-+    }
-+
-+    .chart-head {
-+      display: flex;
-+      justify-content: space-between;
-+      gap: 12px;
-+      align-items: start;
-+      margin-bottom: 8px;
-+    }
-+
-+    .chart-title h3 {
-+      margin: 0 0 4px;
-+      font-size: 1rem;
-+    }
-+
-+    .chart-title p {
-+      margin: 0;
-+      color: var(--muted);
-+      font-size: 0.86rem;
-+      line-height: 1.45;
-+    }
-+
-+    .legend {
-+      display: flex;
-+      flex-wrap: wrap;
-+      justify-content: flex-end;
-+      gap: 10px;
-+      min-width: 140px;
-+    }
-+
-+    .legend-item {
-+      display: inline-flex;
-+      align-items: center;
-+      gap: 6px;
-+      color: var(--muted);
-+      font-size: 0.76rem;
-+      white-space: nowrap;
-+    }
-+
-+    .legend-swatch {
-+      width: 10px;
-+      height: 10px;
-+      border-radius: 999px;
-+      flex: 0 0 auto;
-+    }
-+
-+    .chart-wrap {
-+      width: 100%;
-+      height: 290px;
-+      position: relative;
-+    }
-+
-+    .chart-wrap svg {
-+      width: 100%;
-+      height: 100%;
-+      display: block;
-+    }
-+
-+    .axis text {
-+      fill: #4b5563;
-+      font-size: 11px;
-+    }
-+
-+    .axis path,
-+    .axis line {
-+      stroke: var(--grid);
-+    }
-+
-+    .grid line {
-+      stroke: rgba(216, 223, 235, 0.7);
-+      stroke-dasharray: 2 4;
-+    }
-+
-+    .grid path {
-+      stroke: none;
-+    }
-+
-+    .tooltip {
-+      position: absolute;
-+      pointer-events: none;
-+      padding: 10px 12px;
-+      background: rgba(15, 23, 42, 0.92);
-+      color: #f8fafc;
-+      border-radius: 12px;
-+      font-size: 0.8rem;
-+      line-height: 1.4;
-+      opacity: 0;
-+      transform: translate(-50%, calc(-100% - 12px));
-+      transition: opacity 120ms ease;
-+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.3);
-+      min-width: 150px;
-+    }
-+
-+    .tooltip strong {
-+      display: block;
-+      margin-bottom: 4px;
-+      font-size: 0.82rem;
-+    }
-+
-+    .footer-note {
-+      margin-top: 4px;
-+      font-size: 0.83rem;
-+      color: var(--muted);
-+      line-height: 1.5;
-+    }
-+
-+    .ideas {
-+      padding: 18px 20px;
-+    }
-+
-+    .ideas h3 {
-+      margin: 0 0 8px;
-+      font-size: 1rem;
-+    }
-+
-+    .ideas-list {
-+      display: grid;
-+      grid-template-columns: repeat(3, minmax(0, 1fr));
-+      gap: 10px;
-+    }
-+
-+    .idea-card {
-+      background: #fffdfa;
-+      border: 1px solid #e4eaf4;
-+      border-radius: 14px;
-+      padding: 12px;
-+    }
-+
-+    .idea-card strong {
-+      display: block;
-+      margin-bottom: 4px;
-+      font-size: 0.9rem;
-+    }
-+
-+    .idea-card span {
-+      color: var(--muted);
-+      font-size: 0.84rem;
-+      line-height: 1.45;
-+    }
-+
-+    @media (max-width: 1200px) {
-+      .hero-top,
-+      .status-strip,
-+      .ideas-list {
-+        grid-template-columns: 1fr;
-+      }
-+    }
-+
-+    @media (max-width: 1100px) {
-+      .app {
-+        grid-template-columns: 1fr;
-+      }
-+
-+      .controls {
-+        position: static;
-+        max-height: none;
-+      }
-+
-+      .kpis {
-+        grid-template-columns: repeat(2, minmax(0, 1fr));
-+      }
-+
-+      .chart-grid {
-+        grid-template-columns: 1fr;
-+      }
-+    }
-+
-+    @media (max-width: 620px) {
-+      .app {
-+        padding: 14px;
-+      }
-+
-+      .preset-row,
-+      .kpis,
-+      .ideas-list {
-+        grid-template-columns: 1fr;
-+      }
-+
-+      .chart-head {
-+        flex-direction: column;
-+      }
-+
-+      .legend {
-+        justify-content: flex-start;
-+      }
-+    }
-+  </style>
-+</head>
-+<body>
-+  <div class="app">
-+    <aside class="controls panel" id="controls"></aside>
-+
-+    <main class="main">
-+      <section class="hero panel">
-+        <div class="hero-top">
-+          <div>
-+            <h2>Interaktives Rentenmodell fuer politische Szenarien</h2>
-+            <p>
-+              Das Dashboard zeigt, wie Demografie, Arbeitsmarkt und Finanzierung zusammenwirken.
-+              Die Werte sind fiktiv, aber in plausiblen Groessenordnungen fuer ein deutsches Umlagesystem.
-+              Neu hinzugekommen sind eine Szenario-Einordnung, Presets fuer schnelle Vergleiche und zusaetzliche
-+              Charts fuer Systemtragfaehigkeit und Finanzierungsstruktur.
-+            </p>
-+          </div>
-+          <div class="scenario-box">
-+            <div class="eyebrow">Aktuelle Einordnung</div>
-+            <div class="scenario-title" id="scenario-title"></div>
-+            <div class="scenario-text" id="scenario-text"></div>
-+          </div>
-+        </div>
-+        <div class="status-strip" id="status-strip"></div>
-+        <div class="kpis" id="kpis"></div>
-+      </section>
-+
-+      <section class="chart-grid">
-+        <article class="chart-card panel">
-+          <div class="chart-head">
-+            <div class="chart-title">
-+              <h3>Beitragszahler und Rentner</h3>
-+              <p>Demografischer Druck auf das Umlagesystem ueber die Zeit.</p>
-+            </div>
-+            <div class="legend" id="legend-demo"></div>
-+          </div>
-+          <div class="chart-wrap" id="chart-demo"></div>
-+        </article>
-+
-+        <article class="chart-card panel">
-+          <div class="chart-head">
-+            <div class="chart-title">
-+              <h3>Altenquotient</h3>
-+              <p>Rentner je 100 Beschaeftigte. Hoehere Werte bedeuten mehr Druck.</p>
-+            </div>
-+            <div class="legend" id="legend-quotient"></div>
-+          </div>
-+          <div class="chart-wrap" id="chart-quotient"></div>
-+        </article>
-+
-+        <article class="chart-card panel">
-+          <div class="chart-head">
-+            <div class="chart-title">
-+              <h3>Einnahmen, Ausgaben, Bilanz</h3>
-+              <p>Jahreswerte in Milliarden EUR. Defizite werden als Balken sichtbar.</p>
-+            </div>
-+            <div class="legend" id="legend-fin"></div>
-+          </div>
-+          <div class="chart-wrap" id="chart-fin"></div>
-+        </article>
-+
-+        <article class="chart-card panel">
-+          <div class="chart-head">
-+            <div class="chart-title">
-+              <h3>Durchschnittslohn und Standardrente</h3>
-+              <p>Nominale Entwicklung pro Jahr. So wird sichtbar, wie stark Leistungen mitlaufen.</p>
-+            </div>
-+            <div class="legend" id="legend-wage"></div>
-+          </div>
-+          <div class="chart-wrap" id="chart-wage"></div>
-+        </article>
-+
-+        <article class="chart-card panel">
-+          <div class="chart-head">
-+            <div class="chart-title">
-+              <h3>Beitragszahler je Rentner</h3>
-+              <p>Ein direkter Tragfaehigkeitsindikator: je niedriger, desto angespannter das System.</p>
-+            </div>
-+            <div class="legend" id="legend-support"></div>
-+          </div>
-+          <div class="chart-wrap" id="chart-support"></div>
-+        </article>
-+
-+        <article class="chart-card panel">
-+          <div class="chart-head">
-+            <div class="chart-title">
-+              <h3>Rentenniveau und Zuschussquote</h3>
-+              <p>Zwei politische Zielgroessen: Leistungsversprechen und Steueranteil an der Finanzierung.</p>
-+            </div>
-+            <div class="legend" id="legend-policy"></div>
-+          </div>
-+          <div class="chart-wrap" id="chart-policy"></div>
-+        </article>
-+      </section>
-+
-+      <section class="ideas panel">
-+        <h3>Weitere sinnvolle Graphen fuer den naechsten Ausbau</h3>
-+        <div class="ideas-list" id="ideas-list"></div>
-+      </section>
-+
-+      <section class="panel ideas">
-+        <p class="footer-note">
-+          Hinweis: Das ist ein didaktisches Modell ohne Mikro-Simulation. Es ersetzt keine amtliche Prognose,
-+          zeigt aber die Richtungseffekte zentraler Rentenparameter sehr gut. Besonders hilfreich ist es,
-+          mehrere Presets nacheinander zu testen und auf den Zusammenhang zwischen Altenquotient, Zuschussquote
-+          und Bilanz zu achten.
-+        </p>
-+      </section>
-+    </main>
-+  </div>
-+
-+  <script>
-+    const defaults = {
-+      geburtenFaktor: 1.0,
-+      lebenserwartungTrend: 1.5,
-+      nettoZuwanderung: 300,
-+      erwerbsquote: 77.0,
-+      fteQuote: 85.0,
-+      rentenalter: 67.0,
-+      inflation: 2.0,
-+      reallohnWachstum: 1.0,
-+      beitragssatz: 18.6,
-+      bundeszuschuss: 112.0,
-+      rentenniveau: 48.0,
-+      nachhaltigkeitsfaktor: 0.25
-+    };
-+
-+    const state = { ...defaults };
-+
-+    const fmt = {
-+      int: d3.format(",.0f"),
-+      eur0: d => d3.format(",.0f")(d).replace(/,/g, ".") + " EUR",
-+      bn1: d => d3.format(",.1f")(d).replace(/,/g, ".") + " Mrd EUR",
-+      pct1: d => d3.format(".1f")(d).replace(".", ",") + " %",
-+      ratio2: d => d3.format(".2f")(d).replace(".", ",")
-+    };
-+
-+    const controlsDef = [
-+      { type: "title", label: "Szenarien" },
-+      { type: "buttons" },
-+      { type: "title", label: "Demografie und Arbeitsmarkt" },
-+      { key: "geburtenFaktor", label: "Geburtenentwicklung", min: 0.5, max: 1.5, step: 0.05, unit: "", hint: "1,0 entspricht in etwa dem heutigen Ausgangspfad." },
-+      { key: "lebenserwartungTrend", label: "Lebenserwartung +Jahre/Jahrzehnt", min: 0.0, max: 3.0, step: 0.1, unit: "", hint: "Hoehere Lebenserwartung verlaengert die Rentenbezugsdauer." },
-+      { key: "nettoZuwanderung", label: "Netto-Zuwanderung pro Jahr", min: 0, max: 800, step: 10, unit: " Tsd", hint: "Annahme: 80 Prozent der Netto-Zuwanderung sind im Erwerbsalter." },
-+      { key: "erwerbsquote", label: "Erwerbsquote", min: 60, max: 90, step: 1, unit: "%", hint: "Mehr Erwerbstaetigkeit verbreitert die Beitragsbasis." },
-+      { key: "fteQuote", label: "Arbeitszeit-Faktor (FTE)", min: 60, max: 100, step: 1, unit: "%", hint: "Teilzeit und geringere Wochenstunden wirken hier direkt." },
-+      { key: "rentenalter", label: "Renteneintrittsalter", min: 63, max: 72, step: 0.5, unit: " Jahre", hint: "Hoeheres Rentenalter senkt Rentnerzahl und hebt Erwerbspersonenpotenzial." },
-+      { type: "title", label: "Oekonomie und Finanzen" },
-+      { key: "inflation", label: "Inflation pro Jahr", min: 0, max: 8, step: 0.1, unit: "%", hint: "Inflation wirkt zusammen mit dem Reallohnwachstum auf den Nominallohn." },
-+      { key: "reallohnWachstum", label: "Reallohnwachstum pro Jahr", min: -2, max: 4, step: 0.1, unit: "%", hint: "Mehr Reallohnwachstum stabilisiert die Finanzierungsbasis." },
-+      { key: "beitragssatz", label: "Beitragssatz", min: 15, max: 25, step: 0.1, unit: "%", hint: "Direkter Hebel fuer die Einnahmenseite." },
-+      { key: "bundeszuschuss", label: "Bundeszuschuss", min: 50, max: 150, step: 5, unit: " Mrd EUR", hint: "Je hoeher der Zuschuss, desto groesser der Steueranteil an der Finanzierung." },
-+      { type: "title", label: "Leistungsziel" },
-+      { key: "rentenniveau", label: "Angestrebtes Rentenniveau", min: 40, max: 60, step: 0.5, unit: "%", hint: "Die Haltelinie wird hier vereinfacht als Untergrenze modelliert." },
-+      { key: "nachhaltigkeitsfaktor", label: "Daempfungs-Intensitaet", min: 0, max: 1, step: 0.05, unit: "", hint: "0 bedeutet fixes Niveau, 1 bedeutet starke Reaktion auf Alterung." }
-+    ];
-+
-+    const presets = [
-+      {
-+        label: "Basisszenario",
-+        values: { ...defaults }
-+      },
-+      {
-+        label: "Reformpfad",
-+        values: {
-+          ...defaults,
-+          nettoZuwanderung: 380,
-+          erwerbsquote: 80,
-+          fteQuote: 88,
-+          rentenalter: 68,
-+          reallohnWachstum: 1.3,
-+          bundeszuschuss: 105,
-+          nachhaltigkeitsfaktor: 0.4
-+        }
-+      },
-+      {
-+        label: "Stress-Test",
-+        values: {
-+          ...defaults,
-+          geburtenFaktor: 0.9,
-+          lebenserwartungTrend: 2.3,
-+          nettoZuwanderung: 150,
-+          erwerbsquote: 73,
-+          fteQuote: 80,
-+          rentenalter: 66,
-+          reallohnWachstum: 0.2,
-+          beitragssatz: 18.6,
-+          bundeszuschuss: 95,
-+          rentenniveau: 50,
-+          nachhaltigkeitsfaktor: 0.1
-+        }
-+      },
-+      {
-+        label: "Reset",
-+        values: { ...defaults }
-+      }
-+    ];
-+
-+    const extraIdeas = [
-+      {
-+        title: "Sensitivitaets-Heatmap",
-+        text: "Welche Kombination aus Beitragssatz und Rentenalter das Defizit ab welchem Jahr dreht."
-+      },
-+      {
-+        title: "Kohorten-Baum",
-+        text: "Uebergang von Erwerbs- zu Rentnerjahrgaengen, um den Boomer-Effekt noch anschaulicher zu zeigen."
-+      },
-+      {
-+        title: "Break-even-Karte",
-+        text: "Welcher Bundeszuschuss bei gegebenem Rentenniveau noetig waere, um die Bilanz zu stabilisieren."
-+      }
-+    ];
-+
-+    function buildControls() {
-+      const root = d3.select("#controls");
-+      root.html("");
-+      root.append("h1").text("Parametersteuerung");
-+      root.append("p").attr("class", "sub").text("Mit den Presets lassen sich politische Pfade schnell vergleichen. Alle Diagramme reagieren sofort.");
-+
-+      controlsDef.forEach(cfg => {
-+        if (cfg.type === "title") {
-+          root.append("div").attr("class", "group-title").text(cfg.label);
-+          return;
-+        }
-+
-+        if (cfg.type === "buttons") {
-+          const row = root.append("div").attr("class", "preset-row");
-+          presets.forEach(preset => {
-+            row.append("button")
-+              .attr("type", "button")
-+              .text(preset.label)
-+              .on("click", () => {
-+                Object.assign(state, preset.values);
-+                syncControls();
-+                renderAll();
-+              });
-+          });
-+          return;
-+        }
-+
-+        const wrap = root.append("div").attr("class", "ctrl");
-+        const label = wrap.append("label");
-+        label.append("span").text(cfg.label);
-+        label.append("output")
-+          .attr("id", `out-${cfg.key}`)
-+          .text(formatControlValue(state[cfg.key], cfg));
-+
-+        wrap.append("input")
-+          .attr("id", `input-${cfg.key}`)
-+          .attr("type", "range")
-+          .attr("min", cfg.min)
-+          .attr("max", cfg.max)
-+          .attr("step", cfg.step)
-+          .attr("value", state[cfg.key])
-+          .on("input", function () {
-+            state[cfg.key] = Number(this.value);
-+            d3.select(`#out-${cfg.key}`).text(formatControlValue(state[cfg.key], cfg));
-+            renderAll();
-+          });
-+
-+        if (cfg.hint) {
-+          wrap.append("div")
-+            .attr("class", "ctrl-hint")
-+            .text(cfg.hint);
-+        }
-+      });
-+    }
-+
-+    function syncControls() {
-+      controlsDef.forEach(cfg => {
-+        if (!cfg.key) return;
-+        d3.select(`#input-${cfg.key}`).property("value", state[cfg.key]);
-+        d3.select(`#out-${cfg.key}`).text(formatControlValue(state[cfg.key], cfg));
-+      });
-+    }
-+
-+    function buildIdeas() {
-+      const cards = d3.select("#ideas-list")
-+        .selectAll("div.idea-card")
-+        .data(extraIdeas);
-+
-+      const enter = cards.enter()
-+        .append("div")
-+        .attr("class", "idea-card");
-+
-+      enter.append("strong");
-+      enter.append("span");
-+
-+      enter.merge(cards).select("strong").text(d => d.title);
-+      enter.merge(cards).select("span").text(d => d.text);
-+
-+      cards.exit().remove();
-+    }
-+
-+    function buildLegend(rootId, items) {
-+      const legend = d3.select(rootId);
-+      const entries = legend.selectAll("div.legend-item").data(items, d => d.label);
-+
-+      const enter = entries.enter()
-+        .append("div")
-+        .attr("class", "legend-item");
-+
-+      enter.append("span").attr("class", "legend-swatch");
-+      enter.append("span").attr("class", "legend-label");
-+
-+      const merged = enter.merge(entries);
-+      merged.select(".legend-swatch").style("background", d => d.color);
-+      merged.select(".legend-label").text(d => d.label);
-+
-+      entries.exit().remove();
-+    }
-+
-+    function formatControlValue(v, cfg) {
-+      const isInt = Number.isInteger(cfg.step);
-+      const str = isInt ? d3.format(".0f")(v) : d3.format(".1f")(v).replace(".", ",");
-+      return str + cfg.unit;
-+    }
-+
-+    function simulate() {
-+      const years = d3.range(2025, 2061);
-+      const startWorkersPotential = 50_000_000;
-+      const startPensioners = 21_000_000;
-+      const startAvgWage = 45_000;
-+
-+      let cumulativeBalance = 0;
-+      let cumZuwandererWorkingAge = 0;
-+
-+      return years.map((year, i) => {
-+        const ageEffect = (state.rentenalter - 67.0) * 0.03;
-+        cumZuwandererWorkingAge += (state.nettoZuwanderung * 1000) * 0.8;
-+
-+        let boomerShift = 0;
-+        if (year < 2038) {
-+          boomerShift = Math.sin((year - 2020) * 0.15) * 0.1;
-+        }
-+
-+        const workingPotential = startWorkersPotential
-+          * (1 + (state.geburtenFaktor - 1) * (i / 40))
-+          * (1 + ageEffect - Math.max(0, boomerShift))
-+          + cumZuwandererWorkingAge;
-+
-+        const pensioners = startPensioners
-+          * (1 + (state.lebenserwartungTrend * 0.05) * (i / 10))
-+          * (1 - ageEffect + Math.max(0, boomerShift * 1.5));
-+
-+        const employed = workingPotential * (state.erwerbsquote / 100) * (state.fteQuote / 100);
-+        const nominalWageGrowth = state.inflation + state.reallohnWachstum;
-+        const avgWage = startAvgWage * ((1 + nominalWageGrowth / 100) ** i);
-+        const wageBill = employed * avgWage;
-+
-+        const contributions = wageBill * (state.beitragssatz / 100);
-+        const subsidy = state.bundeszuschuss * 1e9;
-+        const totalRevenue = contributions + subsidy;
-+
-+        const oldAgeRatioVal = pensioners / employed || 0;
-+        const initialOptRatio = startPensioners / (startWorkersPotential * 0.77 * 0.85);
-+        const daempfung = 1 - (state.nachhaltigkeitsfaktor * Math.max(0, (oldAgeRatioVal - initialOptRatio)));
-+        const actualRentenniveau = Math.max(state.rentenniveau / 100, (state.rentenniveau / 100) * daempfung);
-+
-+        const standardPension = avgWage * actualRentenniveau;
-+        const pensionExpense = pensioners * standardPension;
-+        const balance = totalRevenue - pensionExpense;
-+        cumulativeBalance += balance;
-+
-+        return {
-+          year,
-+          employedMio: employed / 1e6,
-+          pensionersMio: pensioners / 1e6,
-+          oldAgeRatio: oldAgeRatioVal * 100,
-+          supportRatio: employed / pensioners,
-+          avgWage,
-+          standardPension,
-+          actualRentenniveau: actualRentenniveau * 100,
-+          contributionsBn: contributions / 1e9,
-+          subsidyBn: subsidy / 1e9,
-+          subsidyShare: totalRevenue > 0 ? (subsidy / totalRevenue) * 100 : 0,
-+          expenseBn: pensionExpense / 1e9,
-+          balanceBn: balance / 1e9,
-+          cumBalanceBn: cumulativeBalance / 1e9
-+        };
-+      });
-+    }
-+
-+    function scenarioSummary(last) {
-+      if (last.balanceBn > 40 && last.supportRatio > 1.8) {
-+        return {
-+          title: "Robuster Pfad",
-+          text: "Die Kombination aus Beitragsbasis und Leistungsniveau bleibt bis 2060 vergleichsweise stabil."
-+        };
-+      }
-+      if (last.balanceBn > -30 && last.supportRatio > 1.45) {
-+        return {
-+          title: "Anspannungsphase",
-+          text: "Das System bleibt steuerbar, braucht aber politische Nachsteuerung bei Leistungen, Finanzierung oder Erwerbsbeteiligung."
-+        };
-+      }
-+      return {
-+        title: "Klarer Reformdruck",
-+        text: "Defizite und sinkende Beitragszahler-Rentner-Relation deuten auf einen kaum tragfaehigen Pfad ohne Gegenmassnahmen."
-+      };
-+    }
-+
-+    function renderStatus(data) {
-+      const first = data[0];
-+      const last = data[data.length - 1];
-+      const summary = scenarioSummary(last);
-+      d3.select("#scenario-title").text(summary.title);
-+      d3.select("#scenario-text").text(summary.text);
-+
-+      const statusData = [
-+        {
-+          label: "Tragfaehigkeit",
-+          value: fmt.ratio2(last.supportRatio) + " Zahler je Rentner",
-+          note: "Ausgangswert " + fmt.ratio2(first.supportRatio) + ".",
-+        },
-+        {
-+          label: "Steuerabhaengigkeit",
-+          value: fmt.pct1(last.subsidyShare),
-+          note: "Anteil des Bundeszuschusses an den Gesamteinnahmen im Jahr 2060."
-+        },
-+        {
-+          label: "Leistungsniveau",
-+          value: fmt.pct1(last.actualRentenniveau),
-+          note: "Tatsaechlich modelliertes Rentenniveau nach Daempfung."
-+        }
-+      ];
-+
-+      const cards = d3.select("#status-strip")
-+        .selectAll("div.status-card")
-+        .data(statusData, d => d.label);
-+
-+      const enter = cards.enter()
-+        .append("div")
-+        .attr("class", "status-card");
-+
-+      enter.append("div").attr("class", "status-label");
-+      enter.append("div").attr("class", "status-value");
-+      enter.append("div").attr("class", "status-note");
-+
-+      const merged = enter.merge(cards);
-+      merged.select(".status-label").text(d => d.label);
-+      merged.select(".status-value").text(d => d.value);
-+      merged.select(".status-note").text(d => d.note);
-+
-+      cards.exit().remove();
-+    }
-+
-+    function renderKPIs(data) {
-+      const first = data[0];
-+      const last = data[data.length - 1];
-+
-+      const kpiData = [
-+        {
-+          label: "Bilanz 2060",
-+          value: fmt.bn1(last.balanceBn),
-+          delta: fmt.bn1(last.balanceBn - first.balanceBn),
-+          cls: last.balanceBn >= 0 ? "ok" : "bad"
-+        },
-+        {
-+          label: "Altenquotient 2060",
-+          value: fmt.pct1(last.oldAgeRatio),
-+          delta: d3.format("+.1f")(last.oldAgeRatio - first.oldAgeRatio).replace(".", ",") + " Punkte",
-+          cls: last.oldAgeRatio < 55 ? "ok" : last.oldAgeRatio < 70 ? "warn" : "bad"
-+        },
-+        {
-+          label: "Standardrente 2060",
-+          value: fmt.eur0(last.standardPension),
-+          delta: fmt.eur0(last.standardPension - first.standardPension),
-+          cls: "ok"
-+        },
-+        {
-+          label: "Kumulierte Bilanz bis 2060",
-+          value: fmt.bn1(last.cumBalanceBn),
-+          delta: last.cumBalanceBn >= 0 ? "Stabiler Pfad" : "Defizitpfad",
-+          cls: last.cumBalanceBn >= 0 ? "ok" : "bad"
-+        }
-+      ];
-+
-+      const cards = d3.select("#kpis")
-+        .selectAll("div.kpi")
-+        .data(kpiData, d => d.label);
-+
-+      const enter = cards.enter()
-+        .append("div")
-+        .attr("class", "kpi");
-+
-+      enter.append("div").attr("class", "label");
-+      enter.append("div").attr("class", "value");
-+      enter.append("div").attr("class", "delta");
-+
-+      const merged = enter.merge(cards);
-+      merged.select(".label").text(d => d.label);
-+      merged.select(".value").text(d => d.value);
-+      merged.select(".delta").attr("class", d => `delta ${d.cls}`).text(d => d.delta);
-+
-+      cards.exit().remove();
-+    }
-+
-+    function makeChart(rootId) {
-+      const root = d3.select(rootId);
-+      const width = root.node().clientWidth;
-+      const height = root.node().clientHeight;
-+      const margin = { top: 16, right: 16, bottom: 30, left: 56 };
-+
-+      root.html("");
-+      root.append("div").attr("class", "tooltip");
-+
-+      const svg = root.append("svg")
-+        .attr("viewBox", `0 0 ${width} ${height}`)
-+        .attr("preserveAspectRatio", "xMidYMid meet");
-+
-+      svg.append("g").attr("class", "grid y-grid").attr("transform", `translate(${margin.left}, 0)`);
-+      svg.append("g").attr("class", "plot");
-+      svg.append("g").attr("class", "x axis").attr("transform", `translate(0, ${height - margin.bottom})`);
-+      svg.append("g").attr("class", "y axis").attr("transform", `translate(${margin.left}, 0)`);
-+
-+      return { root, svg, width, height, margin };
-+    }
-+
-+    let charts = {};
-+
-+    function ensureCharts() {
-+      charts = {
-+        demo: makeChart("#chart-demo"),
-+        quotient: makeChart("#chart-quotient"),
-+        fin: makeChart("#chart-fin"),
-+        wage: makeChart("#chart-wage"),
-+        support: makeChart("#chart-support"),
-+        policy: makeChart("#chart-policy")
-+      };
-+    }
-+
-+    function updateGrid(chart, y, ticks = 6) {
-+      const { svg, width, margin } = chart;
-+      svg.select(".y-grid")
-+        .call(d3.axisLeft(y).ticks(ticks).tickSize(-(width - margin.left - margin.right)).tickFormat(""));
-+    }
-+
-+    function attachTooltip(chart, data, xScale, yScale, formatter) {
-+      const { root, svg, width, height, margin } = chart;
-+      const tooltip = root.select(".tooltip");
-+      const plot = svg.select(".plot");
-+
-+      plot.selectAll("rect.hover-capture").remove();
-+      plot.selectAll("circle.hover-dot").remove();
-+
-+      const dot = plot.append("circle")
-+        .attr("class", "hover-dot")
-+        .attr("r", 4)
-+        .attr("fill", "#111827")
-+        .attr("stroke", "#fff")
-+        .attr("stroke-width", 2)
-+        .style("opacity", 0);
-+
-+      plot.append("rect")
-+        .attr("class", "hover-capture")
-+        .attr("x", margin.left)
-+        .attr("y", margin.top)
-+        .attr("width", width - margin.left - margin.right)
-+        .attr("height", height - margin.top - margin.bottom)
-+        .attr("fill", "transparent")
-+        .on("mousemove", function (event) {
-+          const [mx] = d3.pointer(event, this);
-+          const year = Math.round(xScale.invert ? xScale.invert(mx + margin.left) : data[Math.round(mx / Math.max(1, (width - margin.left - margin.right) / data.length))]?.year);
-+          const point = data.reduce((best, cur) => Math.abs(cur.year - year) < Math.abs(best.year - year) ? cur : best, data[0]);
-+          const info = formatter(point);
-+          const dotY = yScale(info.dotValue);
-+          dot
-+            .attr("cx", xScale(point.year))
-+            .attr("cy", dotY)
-+            .style("opacity", 1);
-+
-+          tooltip
-+            .style("opacity", 1)
-+            .style("left", `${xScale(point.year)}px`)
-+            .style("top", `${dotY}px`)
-+            .html(info.html);
-+        })
-+        .on("mouseleave", () => {
-+          dot.style("opacity", 0);
-+          tooltip.style("opacity", 0);
-+        });
-+    }
-+
-+    function drawLineChart(chart, data, series, yLabel, formatter) {
-+      const { svg, width, height, margin } = chart;
-+      const innerW = width - margin.left - margin.right;
-+      const innerH = height - margin.top - margin.bottom;
-+
-+      const x = d3.scaleLinear()
-+        .domain(d3.extent(data, d => d.year))
-+        .range([margin.left, margin.left + innerW]);
-+
-+      const yMax = d3.max(series.flatMap(s => data.map(d => d[s.key])));
-+      const yMin = d3.min(series.flatMap(s => data.map(d => d[s.key])));
-+      const pad = (yMax - yMin) * 0.08 || 1;
-+
-+      const y = d3.scaleLinear()
-+        .domain([Math.min(0, yMin - pad), yMax + pad])
-+        .nice()
-+        .range([margin.top + innerH, margin.top]);
-+
-+      updateGrid(chart, y);
-+
-+      svg.select(".x.axis")
-+        .transition().duration(220)
-+        .call(d3.axisBottom(x).tickFormat(d3.format("d")).ticks(7));
-+
-+      svg.select(".y.axis")
-+        .transition().duration(220)
-+        .call(d3.axisLeft(y).ticks(6));
-+
-+      const plot = svg.select(".plot");
-+      const groups = plot.selectAll("g.series").data(series, d => d.key);
-+      const groupsEnter = groups.enter().append("g").attr("class", "series");
-+      groupsEnter.append("path").attr("fill", "none").attr("stroke-width", 2.5);
-+
-+      groupsEnter.merge(groups).each(function (s) {
-+        d3.select(this)
-+          .select("path")
-+          .datum(data)
-+          .attr("stroke", s.color)
-+          .attr("opacity", 0.96)
-+          .transition()
-+          .duration(220)
-+          .attr("d", d3.line()
-+            .x(d => x(d.year))
-+            .y(d => y(d[s.key]))
-+            .curve(d3.curveMonotoneX));
-+      });
-+
-+      groups.exit().remove();
-+
-+      let yText = svg.selectAll("text.y-label").data([yLabel]);
-+      yText = yText.enter()
-+        .append("text")
-+        .attr("class", "y-label")
-+        .attr("fill", "#4b5563")
-+        .attr("font-size", 11)
-+        .merge(yText)
-+        .attr("x", 8)
-+        .attr("y", margin.top - 4)
-+        .text(d => d);
-+
-+      if (formatter) {
-+        attachTooltip(chart, data, x, y, formatter);
-+      }
-+    }
-+
-+    function drawAreaChart(chart, data) {
-+      const { svg, width, height, margin } = chart;
-+      const innerW = width - margin.left - margin.right;
-+      const innerH = height - margin.top - margin.bottom;
-+
-+      const x = d3.scaleLinear()
-+        .domain(d3.extent(data, d => d.year))
-+        .range([margin.left, margin.left + innerW]);
-+
-+      const y = d3.scaleLinear()
-+        .domain([0, d3.max(data, d => d.oldAgeRatio) * 1.15])
-+        .nice()
-+        .range([margin.top + innerH, margin.top]);
-+
-+      updateGrid(chart, y);
-+
-+      svg.select(".x.axis")
-+        .transition().duration(220)
-+        .call(d3.axisBottom(x).tickFormat(d3.format("d")).ticks(7));
-+
-+      svg.select(".y.axis")
-+        .transition().duration(220)
-+        .call(d3.axisLeft(y).ticks(6));
-+
-+      const area = d3.area()
-+        .x(d => x(d.year))
-+        .y0(y(0))
-+        .y1(d => y(d.oldAgeRatio))
-+        .curve(d3.curveMonotoneX);
-+
-+      const line = d3.line()
-+        .x(d => x(d.year))
-+        .y(d => y(d.oldAgeRatio))
-+        .curve(d3.curveMonotoneX);
-+
-+      let areaPath = svg.selectAll("path.quot-area").data([data]);
-+      areaPath = areaPath.enter().append("path").attr("class", "quot-area").merge(areaPath)
-+        .attr("fill", "rgba(29, 78, 216, 0.20)")
-+        .attr("stroke", "none");
-+      areaPath.transition().duration(220).attr("d", area);
-+
-+      let linePath = svg.selectAll("path.quot-line").data([data]);
-+      linePath = linePath.enter().append("path").attr("class", "quot-line").merge(linePath)
-+        .attr("fill", "none")
-+        .attr("stroke", "#1d4ed8")
-+        .attr("stroke-width", 2.6);
-+      linePath.transition().duration(220).attr("d", line);
-+
-+      attachTooltip(chart, data, x, y, point => ({
-+        dotValue: point.oldAgeRatio,
-+        html: `<strong>${point.year}</strong>Altenquotient: ${fmt.pct1(point.oldAgeRatio)}`
-+      }));
-+    }
-+
-+    function drawFinanceChart(chart, data) {
-+      const { svg, width, height, margin } = chart;
-+      const innerW = width - margin.left - margin.right;
-+      const innerH = height - margin.top - margin.bottom;
-+
-+      const x = d3.scaleBand()
-+        .domain(data.map(d => d.year))
-+        .range([margin.left, margin.left + innerW])
-+        .padding(0.18);
-+
-+      const yMin = d3.min(data, d => Math.min(d.balanceBn, 0));
-+      const yMax = d3.max(data, d => Math.max(d.expenseBn, d.contributionsBn + d.subsidyBn));
-+      const y = d3.scaleLinear()
-+        .domain([yMin * 1.2, yMax * 1.1])
-+        .nice()
-+        .range([margin.top + innerH, margin.top]);
-+
-+      updateGrid(chart, y);
-+
-+      svg.select(".x.axis")
-+        .transition().duration(220)
-+        .call(d3.axisBottom(x)
-+          .tickValues(data.filter((d, i) => i % 6 === 0).map(d => d.year))
-+          .tickFormat(d3.format("d")));
-+
-+      svg.select(".y.axis")
-+        .transition().duration(220)
-+        .call(d3.axisLeft(y).ticks(6));
-+
-+      const plot = svg.select(".plot");
-+
-+      const bars = plot.selectAll("rect.balance").data(data, d => d.year);
-+      bars.enter()
-+        .append("rect")
-+        .attr("class", "balance")
-+        .merge(bars)
-+        .transition().duration(220)
-+        .attr("x", d => x(d.year))
-+        .attr("width", x.bandwidth())
-+        .attr("y", d => y(Math.max(0, d.balanceBn)))
-+        .attr("height", d => Math.abs(y(d.balanceBn) - y(0)))
-+        .attr("fill", d => d.balanceBn >= 0 ? "#15803d" : "#b91c1c")
-+        .attr("opacity", 0.72);
-+      bars.exit().remove();
-+
-+      const lines = [
-+        { key: d => d.expenseBn, className: "expense", color: "#be123c", width: 2.8 },
-+        { key: d => d.contributionsBn + d.subsidyBn, className: "revenue", color: "#0f766e", width: 2.4 }
-+      ];
-+
-+      lines.forEach(lineCfg => {
-+        let path = plot.selectAll(`path.${lineCfg.className}`).data([data]);
-+        path = path.enter().append("path").attr("class", lineCfg.className).merge(path)
-+          .attr("fill", "none")
-+          .attr("stroke", lineCfg.color)
-+          .attr("stroke-width", lineCfg.width);
-+
-+        path.transition().duration(220).attr("d", d3.line()
-+          .x(d => x(d.year) + x.bandwidth() / 2)
-+          .y(d => y(lineCfg.key(d)))
-+          .curve(d3.curveMonotoneX));
-+      });
-+
-+      const xLinear = d3.scaleLinear()
-+        .domain(d3.extent(data, d => d.year))
-+        .range([margin.left, margin.left + innerW]);
-+
-+      attachTooltip(chart, data, xLinear, y, point => ({
-+        dotValue: point.expenseBn,
-+        html: `<strong>${point.year}</strong>Einnahmen: ${fmt.bn1(point.contributionsBn + point.subsidyBn)}<br>Ausgaben: ${fmt.bn1(point.expenseBn)}<br>Bilanz: ${fmt.bn1(point.balanceBn)}`
-+      }));
-+    }
-+
-+    function renderAll() {
-+      const data = simulate();
-+      renderStatus(data);
-+      renderKPIs(data);
-+
-+      buildLegend("#legend-demo", [
-+        { label: "Beitragszahler", color: "#0f766e" },
-+        { label: "Rentner", color: "#b45309" }
-+      ]);
-+
-+      buildLegend("#legend-quotient", [
-+        { label: "Altenquotient", color: "#1d4ed8" }
-+      ]);
-+
-+      buildLegend("#legend-fin", [
-+        { label: "Bilanz", color: "#15803d" },
-+        { label: "Ausgaben", color: "#be123c" },
-+        { label: "Einnahmen", color: "#0f766e" }
-+      ]);
-+
-+      buildLegend("#legend-wage", [
-+        { label: "Durchschnittslohn", color: "#1d4ed8" },
-+        { label: "Standardrente", color: "#be123c" }
-+      ]);
-+
-+      buildLegend("#legend-support", [
-+        { label: "Zahler je Rentner", color: "#7c3aed" }
-+      ]);
-+
-+      buildLegend("#legend-policy", [
-+        { label: "Rentenniveau", color: "#0f172a" },
-+        { label: "Zuschussquote", color: "#b45309" }
-+      ]);
-+
-+      drawLineChart(
-+        charts.demo,
-+        data,
-+        [
-+          { key: "employedMio", color: "#0f766e" },
-+          { key: "pensionersMio", color: "#b45309" }
-+        ],
-+        "Mio Personen",
-+        point => ({
-+          dotValue: point.employedMio,
-+          html: `<strong>${point.year}</strong>Beitragszahler: ${fmt.ratio2(point.employedMio)} Mio<br>Rentner: ${fmt.ratio2(point.pensionersMio)} Mio`
-+        })
-+      );
-+
-+      drawAreaChart(charts.quotient, data);
-+      drawFinanceChart(charts.fin, data);
-+
-+      drawLineChart(
-+        charts.wage,
-+        data,
-+        [
-+          { key: "avgWage", color: "#1d4ed8" },
-+          { key: "standardPension", color: "#be123c" }
-+        ],
-+        "EUR pro Jahr",
-+        point => ({
-+          dotValue: point.standardPension,
-+          html: `<strong>${point.year}</strong>Durchschnittslohn: ${fmt.eur0(point.avgWage)}<br>Standardrente: ${fmt.eur0(point.standardPension)}`
-+        })
-+      );
-+
-+      drawLineChart(
-+        charts.support,
-+        data,
-+        [
-+          { key: "supportRatio", color: "#7c3aed" }
-+        ],
-+        "Relation",
-+        point => ({
-+          dotValue: point.supportRatio,
-+          html: `<strong>${point.year}</strong>${fmt.ratio2(point.supportRatio)} Beitragszahler je Rentner`
-+        })
-+      );
-+
-+      drawLineChart(
-+        charts.policy,
-+        data,
-+        [
-+          { key: "actualRentenniveau", color: "#0f172a" },
-+          { key: "subsidyShare", color: "#b45309" }
-+        ],
-+        "Prozent",
-+        point => ({
-+          dotValue: point.actualRentenniveau,
-+          html: `<strong>${point.year}</strong>Rentenniveau: ${fmt.pct1(point.actualRentenniveau)}<br>Zuschussquote: ${fmt.pct1(point.subsidyShare)}`
-+        })
-+      );
-+    }
-+
-+    buildControls();
-+    buildIdeas();
-+    ensureCharts();
-+    renderAll();
-+
-+    window.addEventListener("resize", () => {
-+      ensureCharts();
-+      renderAll();
-+    });
-+  </script>
-+</body>
-+</html>
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rentenmodell Dashboard - D3.js</title>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --text: #1b1f2a;
+      --muted: #5f6778;
+      --line-1: #0f766e;
+      --line-2: #b45309;
+      --line-3: #1d4ed8;
+      --line-4: #be123c;
+      --ok: #15803d;
+      --bad: #b91c1c;
+      --shadow: 0 10px 25px rgba(21, 28, 45, 0.08);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% -15%, #d8f3ff 0%, transparent 60%),
+        radial-gradient(1000px 700px at 100% -30%, #ffedd5 0%, transparent 50%),
+        var(--bg);
+    }
+
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 22px;
+      display: grid;
+      grid-template-columns: 330px 1fr;
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .controls {
+      padding: 18px;
+      position: sticky;
+      top: 18px;
+      align-self: start;
+      max-height: calc(100vh - 36px);
+      overflow-y: auto;
+    }
+
+    .controls h1 {
+      margin: 0;
+      font-size: 1.3rem;
+      line-height: 1.2;
+    }
+
+    .sub {
+      margin: 8px 0 18px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .group-title {
+      margin: 16px 0 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #111827;
+      border-bottom: 1px solid #e8ebf3;
+      padding-bottom: 6px;
+    }
+
+    .ctrl {
+      margin-bottom: 12px;
+    }
+
+    .ctrl label {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.88rem;
+      color: #1f2937;
+      margin-bottom: 4px;
+    }
+
+    .ctrl output {
+      color: #111827;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #0f766e;
+      cursor: pointer;
+    }
+
+    .main {
+      display: grid;
+      grid-template-rows: auto auto auto;
+      gap: 14px;
+    }
+
+    .intro {
+      padding: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .intro h2 {
+      margin: 0;
+      font-size: 1.35rem;
+    }
+
+    .intro p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 2px;
+    }
+
+    .kpi {
+      background: #f9fbff;
+      border: 1px solid #e5ebf7;
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    .kpi .label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .kpi .value {
+      font-size: 1.08rem;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .kpi .delta {
+      font-size: 0.8rem;
+      margin-top: 2px;
+      font-weight: 600;
+    }
+
+    .delta.ok { color: var(--ok); }
+    .delta.bad { color: var(--bad); }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .chart-card {
+      padding: 12px;
+    }
+
+    .chart-card h3 {
+      margin: 0 0 4px;
+      font-size: 1rem;
+    }
+
+    .chart-card p {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .chart-wrap {
+      width: 100%;
+      height: 280px;
+    }
+
+    .chart-wrap svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .axis text {
+      fill: #4b5563;
+      font-size: 11px;
+    }
+
+    .axis path,
+    .axis line {
+      stroke: #d5dbe8;
+    }
+
+    .footer-note {
+      margin-top: 4px;
+      font-size: 0.83rem;
+      color: var(--muted);
+    }
+
+    @media (max-width: 1100px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        position: static;
+        max-height: none;
+      }
+
+      .kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .chart-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .kpis {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="controls panel" id="controls"></aside>
+
+    <main class="main">
+      <section class="intro panel">
+        <h2>Interaktives Rentenmodell</h2>
+        <p>
+          Das Modell zeigt, wie Demografie, Arbeitsmarkt und Finanzierung zusammenwirken.
+          Alle Daten sind fiktiv, aber in plausiblen Groessenordnungen fuer ein deutsches Umlagesystem.
+          Jede Slider-Bewegung berechnet die Zeitreihe sofort neu.
+        </p>
+        <div class="kpis" id="kpis"></div>
+      </section>
+
+      <section class="chart-grid">
+        <article class="chart-card panel">
+          <h3>Beitragszahler und Rentner</h3>
+          <p>Demografischer Druck auf das Umlagesystem.</p>
+          <div class="chart-wrap" id="chart-demo"></div>
+        </article>
+
+        <article class="chart-card panel">
+          <h3>Altenquotient</h3>
+          <p>Rentner je 100 Beschaeftigte.</p>
+          <div class="chart-wrap" id="chart-quotient"></div>
+        </article>
+
+        <article class="chart-card panel">
+          <h3>Einnahmen, Ausgaben, Bilanz</h3>
+          <p>Jahreswerte in Milliarden Euro.</p>
+          <div class="chart-wrap" id="chart-fin"></div>
+        </article>
+
+        <article class="chart-card panel">
+          <h3>Durchschnittslohn und Standardrente</h3>
+          <p>Nominale Entwicklung pro Jahr.</p>
+          <div class="chart-wrap" id="chart-wage"></div>
+        </article>
+      </section>
+
+      <section class="intro panel">
+        <p class="footer-note">
+          Hinweis: Das ist ein didaktisches Modell ohne Mikro-Simulation. Es ersetzt keine amtliche Prognose,
+          zeigt aber die Richtungseffekte zentraler Rentenparameter sehr gut.
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function showDependencyError() {
+      const main = document.querySelector(".main");
+      if (!main) {
+        return;
+      }
+
+      main.innerHTML = `
+        <section class="intro panel">
+          <h2>Dashboard konnte nicht geladen werden</h2>
+          <p>
+            Die Bibliothek D3.js konnte nicht geladen werden. Bitte pruefe die Internetverbindung
+            oder lade die Seite erneut. Optional kann D3 lokal eingebunden werden.
+          </p>
+        </section>
+      `;
+    }
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.async = true;
+        script.onload = () => resolve(true);
+        script.onerror = () => reject(new Error(`Konnte Script nicht laden: ${src}`));
+        document.head.appendChild(script);
+      });
+    }
+
+    async function ensureD3() {
+      if (typeof window.d3 !== "undefined") {
+        return true;
+      }
+
+      const fallbackSources = [
+        "https://unpkg.com/d3@7/dist/d3.min.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"
+      ];
+
+      for (const src of fallbackSources) {
+        try {
+          await loadScript(src);
+          if (typeof window.d3 !== "undefined") {
+            return true;
+          }
+        } catch (err) {
+          // Try next source.
+        }
+      }
+
+      return false;
+    }
+
+    async function bootDashboard() {
+      const d3Ready = await ensureD3();
+      if (!d3Ready) {
+        showDependencyError();
+        return;
+      }
+
+      const fmt = {
+      int: d3.format(",.0f"),
+      one: d3.format(",.1f"),
+      eur0: d => d3.format(",.0f")(d).replace(/,/g, ".") + " €",
+      mrde1: d => d3.format(",.1f")(d).replace(/,/g, ".") + " Mrd €",
+      pct1: d => d3.format(".1f")(d).replace(/\./g, ",") + " %"
+    };
+
+    const state = {
+      geburtenFaktor: 1.0,
+      lebenserwartungTrend: 1.5,
+      nettoZuwanderung: 300,
+      erwerbsquote: 77.0,
+      fteQuote: 85.0,
+      rentenalter: 67.0,
+      inflation: 2.0,
+      reallohnWachstum: 1.0,
+      beitragssatz: 18.6,
+      bundeszuschuss: 112.0,
+      rentenniveau: 48.0,
+      nachhaltigkeitsfaktor: 0.25
+    };
+
+    const controlsDef = [
+      { type: "title", label: "Demografie & Arbeitsmarkt" },
+      { key: "geburtenFaktor", label: "Geburtenentwicklung (Faktor)", min: 0.5, max: 1.5, step: 0.05, unit: "", hint: "Realität: ~1.0 (ca. 1,4 - 1,5 Kinder/Frau)" },
+      { key: "lebenserwartungTrend", label: "Lebenserwartung (+Jahre/Jahrzehnt)", min: 0.0, max: 3.0, step: 0.1, unit: "", hint: "Realität: ~1.5 Jahre Anstieg pro Jahrzehnt" },
+      { key: "nettoZuwanderung", label: "Netto-Zuwanderung p.a.", min: 0, max: 800, step: 10, unit: " Tsd", hint: "Realität: ca. 300-400 Tsd. laut Prognosen" },
+      { key: "erwerbsquote", label: "Erwerbsquote (Köpfe)", min: 60, max: 90, step: 1, unit: "%", hint: "Realität: ca. 77% in Deutschland (2023)" },
+      { key: "fteQuote", label: "Arbeitszeit-Faktor (FTE)", min: 60, max: 100, step: 1, unit: "%", hint: "Realität: Teilzeit drückt effektives Arbeitsvolumen" },
+      { key: "rentenalter", label: "Renteneintrittsalter", min: 63, max: 72, step: 0.5, unit: " Jahre", hint: "Realität: Steigt schrittweise auf 67" },
+      { type: "title", label: "Oekonomie & Finanzen" },
+      { key: "inflation", label: "Inflation p.a.", min: 0, max: 8, step: 0.1, unit: "%", hint: "Realität: EZB-Ziel 2,0%" },
+      { key: "reallohnWachstum", label: "Reallohnwachstum p.a.", min: -2, max: 4, step: 0.1, unit: "%", hint: "Realität: Lohnsteigerung NACH Inflation, ca. 0.5% - 1.5%" },
+      { key: "beitragssatz", label: "Beitragssatz", min: 15, max: 25, step: 0.1, unit: "%", hint: "Realität: Z.Zt. fixiert bei 18,6%" },
+      { key: "bundeszuschuss", label: "Bundeszuschuss", min: 50, max: 150, step: 5, unit: " Mrd €", hint: "Realität: >112 Mrd. € pro Jahr" },
+      { type: "title", label: "Leistungsziel" },
+      { key: "rentenniveau", label: "Angestrebtes Rentenniveau", min: 40, max: 60, step: 0.5, unit: "%", hint: "Realität: Gesetzlich bis 2025 bei 48% gesichert" },
+      { key: "nachhaltigkeitsfaktor", label: "Dämpfungs-Intensität", min: 0, max: 1, step: 0.05, unit: "", hint: "0=Fixes Niveau, 1=Starker Einschnitt bei Alterung (Modellvereinfacht)" }
+    ];
+
+    function buildControls() {
+      const root = d3.select("#controls");
+      root.html("");
+      root.append("h1").text("Parametersteuerung");
+      root.append("p").attr("class", "sub").text("Alle Graphen aktualisieren sofort bei jeder Aenderung.");
+
+      controlsDef.forEach(cfg => {
+        if (cfg.type === "title") {
+          root.append("div").attr("class", "group-title").text(cfg.label);
+          return;
+        }
+
+        const wrap = root.append("div").attr("class", "ctrl");
+        const label = wrap.append("label");
+        label.append("span").text(cfg.label);
+        label.append("output")
+          .attr("id", `out-${cfg.key}`)
+          .text(formatControlValue(state[cfg.key], cfg));
+
+        wrap.append("input")
+          .attr("type", "range")
+          .attr("min", cfg.min)
+          .attr("max", cfg.max)
+          .attr("step", cfg.step)
+          .attr("value", state[cfg.key])
+          .on("input", function () {
+            state[cfg.key] = Number(this.value);
+            d3.select(`#out-${cfg.key}`).text(formatControlValue(state[cfg.key], cfg));
+            renderAll();
+          });
+          
+        if (cfg.hint) {
+          wrap.append("div")
+            .attr("style", "font-size:0.75rem; color:#6b7280; margin-top:2px;")
+            .text(cfg.hint);
+        }
+      });
+    }
+
+    function formatControlValue(v, cfg) {
+      const isInt = Number.isInteger(cfg.step);
+      const str = isInt ? d3.format(".0f")(v) : d3.format(".1f")(v).replace(".", ",");
+      return str + cfg.unit;
+    }
+
+    function simulate() {
+      const years = d3.range(2025, 2061);
+      const startWorkersPotential = 50_000_000;
+      const startPensioners = 21_000_000;
+      const startAvgWage = 45_000;
+
+      let cumulativeBalance = 0;
+      let cumZuwandererWorkingAge = 0;
+
+      // Babyboomer Wellen-Effekt Simulation (Starker Anstieg an Rentnern in den Jahren 2025-2035)
+      // Wir modellieren dies über einen zusätzlichen Skalar, der in diesen Jahren die Alterung treibt.
+
+      return years.map((year, i) => {
+        const ageEffect = (state.rentenalter - 67.0) * 0.03;
+        
+        // Zuwanderung aufkumulieren (Annahme: 80% der Netto-Zuwanderer sind im erwerbsfähigen Alter)
+        cumZuwandererWorkingAge += (state.nettoZuwanderung * 1000) * 0.8;
+        
+        // Babyboomer-Welle (Zusätzlicher Shift 2025 - 2038)
+        let boomerShift = 0;
+        if (year < 2038) {
+           boomerShift = Math.sin((year - 2020) * 0.15) * 0.1; // Erzeugt eine sanfte Welle in diesen Jahren
+        }
+
+        const workingPotential = startWorkersPotential
+          * (1 + (state.geburtenFaktor - 1) * (i / 40))
+          * (1 + ageEffect - Math.max(0, boomerShift))
+          + cumZuwandererWorkingAge;
+
+        const pensioners = startPensioners
+          * (1 + (state.lebenserwartungTrend * 0.05) * (i / 10))
+          * (1 - ageEffect + Math.max(0, boomerShift * 1.5)); // Mehr Rentner
+
+        // Effektive Beschäftigung (Köpfe * FTE-Faktor für Steuerlast und Output)
+        const employed = workingPotential * (state.erwerbsquote / 100) * (state.fteQuote / 100);
+        
+        // Kombination Inflation + Reallohnwachstum
+        const nominalWageGrowth = state.inflation + state.reallohnWachstum;
+        const avgWage = startAvgWage * ((1 + nominalWageGrowth / 100) ** i);
+        const wageBill = employed * avgWage;
+
+        const contributions = wageBill * (state.beitragssatz / 100);
+        const totalRevenue = contributions + state.bundeszuschuss * 1e9;
+
+        // Nachhaltigkeitsfaktor: Drückt das Rentenniveau, wenn der Altenquotient steigt
+        // Vereinfachte Regelung: (Rentner / Zahler) beeinflusst die Steigerung
+        const oldAgeRatioVal = pensioners / employed || 0;
+        const initialOptRatio = startPensioners / (startWorkersPotential * 0.77 * 0.85);
+        const daempfung = 1 - (state.nachhaltigkeitsfaktor * Math.max(0, (oldAgeRatioVal - initialOptRatio)));
+        
+        // Absicherung nach unten durch "Haltelinie" (Rentenniveau-Slider)
+        const actualRentenniveau = Math.max(state.rentenniveau / 100, (state.rentenniveau / 100) * daempfung);
+
+        const standardPension = avgWage * actualRentenniveau;
+        const pensionExpense = pensioners * standardPension;
+
+        const balance = totalRevenue - pensionExpense;
+        cumulativeBalance += balance;
+
+        return {
+          year,
+          employedMio: employed / 1e6,
+          pensionersMio: pensioners / 1e6,
+          oldAgeRatio: oldAgeRatioVal * 100,
+          avgWage,
+          standardPension,
+          actualRentenniveau: actualRentenniveau * 100,
+          contributionsBn: contributions / 1e9,
+          subsidyBn: state.bundeszuschuss,
+          expenseBn: pensionExpense / 1e9,
+          balanceBn: balance / 1e9,
+          cumBalanceBn: cumulativeBalance / 1e9
+        };
+      });
+    }
+
+    function makeChart(rootId) {
+      const root = d3.select(rootId);
+      const width = root.node().clientWidth;
+      const height = root.node().clientHeight;
+      const margin = { top: 16, right: 14, bottom: 28, left: 50 };
+
+      root.html("");
+      const svg = root.append("svg")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("preserveAspectRatio", "xMidYMid meet");
+
+      svg.append("g").attr("class", "plot");
+      svg.append("g").attr("class", "x axis").attr("transform", `translate(0, ${height - margin.bottom})`);
+      svg.append("g").attr("class", "y axis").attr("transform", `translate(${margin.left}, 0)`);
+
+      return { svg, width, height, margin };
+    }
+
+    const charts = {
+      demo: makeChart("#chart-demo"),
+      quotient: makeChart("#chart-quotient"),
+      fin: makeChart("#chart-fin"),
+      wage: makeChart("#chart-wage")
+    };
+
+    function renderKPIs(data) {
+      const first = data[0];
+      const last = data[data.length - 1];
+      const kpiData = [
+        {
+          label: "Bilanz 2060",
+          value: fmt.mrde1(last.balanceBn),
+          delta: fmt.mrde1(last.balanceBn - first.balanceBn),
+          cls: last.balanceBn >= 0 ? "ok" : "bad"
+        },
+        {
+          label: "Altenquotient 2060",
+          value: d3.format(".1f")(last.oldAgeRatio).replace(".", ","),
+          delta: d3.format("+.1f")(last.oldAgeRatio - first.oldAgeRatio).replace(".", ","),
+          cls: last.oldAgeRatio <= first.oldAgeRatio ? "ok" : "bad"
+        },
+        {
+          label: "Standardrente 2060",
+          value: fmt.eur0(last.standardPension),
+          delta: fmt.eur0(last.standardPension - first.standardPension),
+          cls: "ok"
+        },
+        {
+          label: "Kumulierte Bilanz bis 2060",
+          value: fmt.mrde1(last.cumBalanceBn),
+          delta: last.cumBalanceBn >= 0 ? "Stabil" : "Defizitpfad",
+          cls: last.cumBalanceBn >= 0 ? "ok" : "bad"
+        }
+      ];
+
+      const cards = d3.select("#kpis")
+        .selectAll("div.kpi")
+        .data(kpiData, d => d.label);
+
+      const enter = cards.enter()
+        .append("div")
+        .attr("class", "kpi");
+
+      enter.append("div").attr("class", "label");
+      enter.append("div").attr("class", "value");
+      enter.append("div").attr("class", "delta");
+
+      const merged = enter.merge(cards);
+      merged.select(".label").text(d => d.label);
+      merged.select(".value").text(d => d.value);
+      merged.select(".delta").attr("class", d => `delta ${d.cls}`).text(d => d.delta);
+
+      cards.exit().remove();
+    }
+
+    function drawLineChart(chart, data, series, yLabel) {
+      const { svg, width, height, margin } = chart;
+      const innerW = width - margin.left - margin.right;
+      const innerH = height - margin.top - margin.bottom;
+
+      const x = d3.scaleLinear()
+        .domain(d3.extent(data, d => d.year))
+        .range([margin.left, margin.left + innerW]);
+
+      const yMax = d3.max(series.flatMap(s => data.map(d => d[s.key])));
+      const yMin = d3.min(series.flatMap(s => data.map(d => d[s.key])));
+      const pad = (yMax - yMin) * 0.08 || 1;
+
+      const y = d3.scaleLinear()
+        .domain([Math.min(0, yMin - pad), yMax + pad])
+        .nice()
+        .range([margin.top + innerH, margin.top]);
+
+      svg.select(".x.axis")
+        .transition().duration(220)
+        .call(d3.axisBottom(x).tickFormat(d3.format("d")).ticks(7));
+
+      svg.select(".y.axis")
+        .transition().duration(220)
+        .call(d3.axisLeft(y).ticks(6));
+
+      const plot = svg.select(".plot");
+
+      const lineGen = d3.line()
+        .x(d => x(d.year))
+        .y((d, i, nodes) => y(d[nodes.seriesKey]))
+        .curve(d3.curveMonotoneX);
+
+      const groups = plot.selectAll("g.series")
+        .data(series, d => d.key);
+
+      const groupsEnter = groups.enter()
+        .append("g")
+        .attr("class", "series");
+
+      groupsEnter.append("path")
+        .attr("fill", "none")
+        .attr("stroke-width", 2.5);
+
+      const all = groupsEnter.merge(groups);
+      all.each(function (s) {
+        const g = d3.select(this);
+        const enriched = data.map(d => ({ ...d, __k: s.key }));
+        enriched.seriesKey = s.key;
+
+        const path = g.select("path")
+          .datum(enriched)
+          .attr("stroke", s.color)
+          .attr("opacity", 0.96);
+
+        path.transition().duration(220)
+          .attr("d", d3.line()
+            .x(d => x(d.year))
+            .y(d => y(d[s.key]))
+            .curve(d3.curveMonotoneX));
+      });
+
+      groups.exit().remove();
+
+      let yText = svg.selectAll("text.y-label").data([yLabel]);
+      yText = yText.enter()
+        .append("text")
+        .attr("class", "y-label")
+        .attr("fill", "#4b5563")
+        .attr("font-size", 11)
+        .merge(yText)
+        .attr("x", 8)
+        .attr("y", margin.top - 4)
+        .text(d => d);
+    }
+
+    function drawAreaChart(chart, data) {
+      const { svg, width, height, margin } = chart;
+      const innerW = width - margin.left - margin.right;
+      const innerH = height - margin.top - margin.bottom;
+
+      const x = d3.scaleLinear()
+        .domain(d3.extent(data, d => d.year))
+        .range([margin.left, margin.left + innerW]);
+
+      const y = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.oldAgeRatio) * 1.15])
+        .nice()
+        .range([margin.top + innerH, margin.top]);
+
+      svg.select(".x.axis")
+        .transition().duration(220)
+        .call(d3.axisBottom(x).tickFormat(d3.format("d")).ticks(7));
+
+      svg.select(".y.axis")
+        .transition().duration(220)
+        .call(d3.axisLeft(y).ticks(6));
+
+      const area = d3.area()
+        .x(d => x(d.year))
+        .y0(y(0))
+        .y1(d => y(d.oldAgeRatio))
+        .curve(d3.curveMonotoneX);
+
+      const line = d3.line()
+        .x(d => x(d.year))
+        .y(d => y(d.oldAgeRatio))
+        .curve(d3.curveMonotoneX);
+
+      let areaPath = svg.selectAll("path.quot-area").data([data]);
+      areaPath = areaPath.enter().append("path").attr("class", "quot-area").merge(areaPath)
+        .attr("fill", "rgba(29, 78, 216, 0.24)")
+        .attr("stroke", "none");
+      areaPath.transition().duration(220).attr("d", area);
+
+      let linePath = svg.selectAll("path.quot-line").data([data]);
+      linePath = linePath.enter().append("path").attr("class", "quot-line").merge(linePath)
+        .attr("fill", "none")
+        .attr("stroke", "#1d4ed8")
+        .attr("stroke-width", 2.5);
+      linePath.transition().duration(220).attr("d", line);
+    }
+
+    function drawFinanceChart(chart, data) {
+      const { svg, width, height, margin } = chart;
+      const innerW = width - margin.left - margin.right;
+      const innerH = height - margin.top - margin.bottom;
+
+      const x = d3.scaleBand()
+        .domain(data.map(d => d.year))
+        .range([margin.left, margin.left + innerW])
+        .padding(0.18);
+
+      const yMin = d3.min(data, d => Math.min(d.balanceBn, 0));
+      const yMax = d3.max(data, d => Math.max(d.expenseBn, d.contributionsBn + d.subsidyBn));
+      const y = d3.scaleLinear()
+        .domain([yMin * 1.2, yMax * 1.1])
+        .nice()
+        .range([margin.top + innerH, margin.top]);
+
+      svg.select(".x.axis")
+        .transition().duration(220)
+        .call(d3.axisBottom(x)
+          .tickValues(data.filter((d, i) => i % 6 === 0).map(d => d.year))
+          .tickFormat(d3.format("d")));
+
+      svg.select(".y.axis")
+        .transition().duration(220)
+        .call(d3.axisLeft(y).ticks(6));
+
+      const plot = svg.select(".plot");
+
+      const bars = plot.selectAll("rect.balance").data(data, d => d.year);
+      bars.enter()
+        .append("rect")
+        .attr("class", "balance")
+        .attr("x", d => x(d.year))
+        .attr("width", x.bandwidth())
+        .attr("y", y(0))
+        .attr("height", 0)
+        .merge(bars)
+        .transition().duration(220)
+        .attr("x", d => x(d.year))
+        .attr("width", x.bandwidth())
+        .attr("y", d => y(Math.max(0, d.balanceBn)))
+        .attr("height", d => Math.abs(y(d.balanceBn) - y(0)))
+        .attr("fill", d => d.balanceBn >= 0 ? "#15803d" : "#b91c1c")
+        .attr("opacity", 0.75);
+      bars.exit().remove();
+
+      const expLine = d3.line()
+        .x(d => x(d.year) + x.bandwidth() / 2)
+        .y(d => y(d.expenseBn))
+        .curve(d3.curveMonotoneX);
+
+      let expPath = plot.selectAll("path.expense").data([data]);
+      expPath = expPath.enter().append("path").attr("class", "expense").merge(expPath)
+        .attr("fill", "none")
+        .attr("stroke", "#be123c")
+        .attr("stroke-width", 2.7);
+      expPath.transition().duration(220).attr("d", expLine);
+
+      const revLine = d3.line()
+        .x(d => x(d.year) + x.bandwidth() / 2)
+        .y(d => y(d.contributionsBn + d.subsidyBn))
+        .curve(d3.curveMonotoneX);
+
+      let revPath = plot.selectAll("path.revenue").data([data]);
+      revPath = revPath.enter().append("path").attr("class", "revenue").merge(revPath)
+        .attr("fill", "none")
+        .attr("stroke", "#0f766e")
+        .attr("stroke-width", 2.3);
+      revPath.transition().duration(220).attr("d", revLine);
+    }
+
+    function renderAll() {
+      const data = simulate();
+      renderKPIs(data);
+
+      drawLineChart(
+        charts.demo,
+        data,
+        [
+          { key: "employedMio", color: "#0f766e" },
+          { key: "pensionersMio", color: "#b45309" }
+        ],
+        "Mio Personen"
+      );
+
+      drawAreaChart(charts.quotient, data);
+
+      drawFinanceChart(charts.fin, data);
+
+      drawLineChart(
+        charts.wage,
+        data,
+        [
+          { key: "avgWage", color: "#1d4ed8" },
+          { key: "standardPension", color: "#be123c" }
+        ],
+        "Euro pro Jahr"
+      );
+    }
+
+      buildControls();
+      renderAll();
+
+      window.addEventListener("resize", () => {
+        charts.demo = makeChart("#chart-demo");
+        charts.quotient = makeChart("#chart-quotient");
+        charts.fin = makeChart("#chart-fin");
+        charts.wage = makeChart("#chart-wage");
+        renderAll();
+      });
+    }
+
+    bootDashboard();
+  </script>
+</body>
+</html>
