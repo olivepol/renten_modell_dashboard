@@ -416,6 +416,18 @@
           <p>Jährliche Beträge. Das verdeutlicht den Unterschied zwischen Standardrente und tatsächlichem Durchschnitt.</p>
           <div class="chart-wrap" id="chart-wage"></div>
         </article>
+
+        <article class="chart-card panel">
+          <h3>Beitragssatz und Sicherungsniveau</h3>
+          <p>Die beiden politisch zentralen Zielgrößen der Rentenpolitik.</p>
+          <div class="chart-wrap" id="chart-policy"></div>
+        </article>
+
+        <article class="chart-card panel">
+          <h3>Nachhaltigkeitsrücklage</h3>
+          <p>Monatsausgaben im Modell. Referenzlinien markieren 0,2 und 1,5 Monatsausgaben.</p>
+          <div class="chart-wrap" id="chart-reserve"></div>
+        </article>
       </section>
     </main>
   </div>
@@ -593,7 +605,7 @@
         { key: "reallohnWachstum", label: "Reallohnwachstum p.a.", min: -1.5, max: 3.0, step: 0.1, unit: "%", hint: "Bestimmt die reale Lohn- und Rentendynamik." },
         { key: "beitragssatz", label: "Beitragssatz", min: 16, max: 25, step: 0.1, unit: "%", hint: "2026 weiterhin 18,6 %; optional dynamisch berechnen lassen." },
         { key: "bundeszuschuss", label: "Bundeszuschüsse allg. RV (Startwert)", min: 70, max: 120, step: 1, unit: " Mrd. €", hint: "Startwert 2025 nahe den allgemeinen + zusätzlichen Bundeszuschüssen." },
-        { key: "zuschussWachstum", label: "Wachstum der Zuschüsse p.a.", min: 0, max: 5, step: 0.1, unit: "%", hint: "" },
+        { key: "zuschussWachstum", label: "Wachstum der Zuschüsse p.a.", min: 0, max: 5, step: 0.1, unit: "%", hint: "Verbesserung ggü. der Ursprungsversion: Zuschüsse bleiben nicht nominal starr." },
         { type: "title", label: "Leistungsniveau" },
         { key: "rentenniveau", label: "Sicherungsniveau / Haltelinie", min: 43, max: 52, step: 0.5, unit: "%", hint: "Im Modell bis 2031 als Haltelinie wirksam, danach wieder gedämpft." },
         { key: "nachhaltigkeitsfaktor", label: "Dämpfungs-Intensität nach 2031", min: 0, max: 0.6, step: 0.05, unit: "", hint: "Je höher, desto stärker fällt das Niveau bei ungünstiger Demografie." }
@@ -609,9 +621,6 @@
         const root = d3.select("#controls");
         root.html("");
         root.append("h1").text("Parametersteuerung");
-        root.append("p")
-          .attr("class", "sub");
-
         root.append("div").attr("class", "group-title").text("Szenarien");
         const presets = root.append("div").attr("class", "scenario-buttons");
         presets.selectAll("button")
@@ -925,7 +934,9 @@
         demo: makeChart("#chart-demo"),
         quotient: makeChart("#chart-quotient"),
         fin: makeChart("#chart-fin"),
-        wage: makeChart("#chart-wage")
+        wage: makeChart("#chart-wage"),
+        policy: makeChart("#chart-policy"),
+        reserve: makeChart("#chart-reserve")
       };
 
       function drawLegend(chart, items) {
@@ -1202,6 +1213,74 @@
         ]);
       }
 
+      function drawReserveChart(chart, data) {
+        const { svg, width, height, margin } = chart;
+        const innerW = width - margin.left - margin.right;
+        const innerH = height - margin.top - margin.bottom;
+
+        const x = d3.scaleLinear()
+          .domain(d3.extent(data, d => d.year))
+          .range([margin.left, margin.left + innerW]);
+
+        const yMin = Math.min(d3.min(data, d => d.reserveMonths), -0.2);
+        const yMax = Math.max(d3.max(data, d => d.reserveMonths), BASE.upperReserveLine + 0.2);
+        const y = d3.scaleLinear()
+          .domain([yMin - 0.2, yMax + 0.2])
+          .nice()
+          .range([margin.top + innerH, margin.top]);
+
+        svg.select(".x.axis").transition().duration(220)
+          .call(d3.axisBottom(x).tickFormat(d3.format("d")).ticks(7));
+
+        svg.select(".y.axis").transition().duration(220)
+          .call(d3.axisLeft(y).ticks(6));
+
+        const plot = svg.select(".plot");
+
+        const thresholds = [
+          { value: BASE.lowerReserveLine, label: "0,2 Monate", color: "#b91c1c" },
+          { value: BASE.upperReserveLine, label: "1,5 Monate", color: "#b45309" }
+        ];
+
+        const tSel = plot.selectAll("g.threshold").data(thresholds, d => d.label);
+        const tEnter = tSel.enter().append("g").attr("class", "threshold");
+        tEnter.append("line").attr("stroke-dasharray", "4 4").attr("stroke-width", 1.2);
+        tEnter.append("text").attr("class", "threshold-label").attr("text-anchor", "end");
+
+        tEnter.merge(tSel).each(function (d) {
+          const g = d3.select(this);
+          g.select("line")
+            .attr("x1", margin.left)
+            .attr("x2", margin.left + innerW)
+            .attr("y1", y(d.value))
+            .attr("y2", y(d.value))
+            .attr("stroke", d.color);
+          g.select("text")
+            .attr("x", margin.left + innerW - 2)
+            .attr("y", y(d.value) - 4)
+            .text(d.label);
+        });
+        tSel.exit().remove();
+
+        let reservePath = plot.selectAll("path.reserve").data([data]);
+        reservePath = reservePath.enter().append("path").attr("class", "reserve").merge(reservePath)
+          .attr("fill", "none")
+          .attr("stroke", "#7c3aed")
+          .attr("stroke-width", 2.7);
+        reservePath.transition().duration(220)
+          .attr("d", d3.line()
+            .x(d => x(d.year))
+            .y(d => y(d.reserveMonths))
+            .curve(d3.curveMonotoneX));
+
+        drawLegend(chart, [{ label: "Rücklage", color: "#7c3aed" }]);
+        setupTooltipInteraction(chart, data, d => x(d.year), d => [
+          `Rücklage: ${fmt.months1(d.reserveMonths)}`,
+          `Rücklage absolut: ${fmt.mrde1(d.reserveBn)}`,
+          `Bilanz: ${fmt.mrde1(d.balanceBn)}`
+        ]);
+      }
+
       function renderAll() {
         const data = simulate();
         renderQualityBox();
@@ -1232,6 +1311,19 @@
           "Euro pro Jahr",
           { forceIncludeZero: false }
         );
+
+        drawLineChart(
+          charts.policy,
+          data,
+          [
+            { key: "effectiveContributionRate", color: "#0f766e", label: "Beitragssatz", tooltip: v => fmt.pct1(v) },
+            { key: "actualRentenniveau", color: "#be123c", label: "Sicherungsniveau", tooltip: v => fmt.pct1(v) }
+          ],
+          "in Prozent",
+          { forceIncludeZero: false }
+        );
+
+        drawReserveChart(charts.reserve, data);
       }
 
       buildControls();
@@ -1245,7 +1337,9 @@
             demo: makeChart("#chart-demo"),
             quotient: makeChart("#chart-quotient"),
             fin: makeChart("#chart-fin"),
-            wage: makeChart("#chart-wage")
+            wage: makeChart("#chart-wage"),
+            policy: makeChart("#chart-policy"),
+            reserve: makeChart("#chart-reserve")
           };
           renderAll();
         }, 100);
