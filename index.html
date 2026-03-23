@@ -220,6 +220,31 @@
       color: #111827;
     }
 
+    .data-basis-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .data-basis-box h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #0f172a;
+    }
+
+    .data-basis-box ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #334155;
+      font-size: 0.83rem;
+      line-height: 1.42;
+      display: grid;
+      gap: 4px;
+    }
+
     .kpis {
       display: grid;
       grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -518,7 +543,7 @@
       const state = {
         geburtenFaktor: 1.0,
         lebenserwartungTrend: 1.5,
-        nettoZuwanderung: 300,
+        nettoZuwanderung: 250,
         erwerbsquote: 77.0,
         fteQuote: 85.0,
         rentenalter: 67.0,
@@ -526,6 +551,7 @@
         reallohnWachstum: 1.0,
         beitragssatz: 18.6,
         dynamicBeitragssatz: false,
+        useArtikelStatusQuoPfad: true,
         bundeszuschuss: 93.2,
         zuschussWachstum: 2.0,
         rentenniveau: 48.0,
@@ -534,11 +560,11 @@
 
       const scenarioPresets = [
         {
-          label: "Kalibrierter Status quo",
+          label: "Status quo (RV-Bericht 2025)",
           values: {
             geburtenFaktor: 1.0,
             lebenserwartungTrend: 1.5,
-            nettoZuwanderung: 300,
+            nettoZuwanderung: 250,
             erwerbsquote: 77.0,
             fteQuote: 85.0,
             rentenalter: 67.0,
@@ -549,6 +575,7 @@
             zuschussWachstum: 2.0,
             rentenniveau: 48.0,
             nachhaltigkeitsfaktor: 0.20,
+            useArtikelStatusQuoPfad: true,
             dynamicBeitragssatz: false
           }
         },
@@ -568,6 +595,7 @@
             zuschussWachstum: 2.2,
             rentenniveau: 48.0,
             nachhaltigkeitsfaktor: 0.10,
+            useArtikelStatusQuoPfad: false,
             dynamicBeitragssatz: false
           }
         },
@@ -587,6 +615,7 @@
             zuschussWachstum: 2.0,
             rentenniveau: 48.5,
             nachhaltigkeitsfaktor: 0.25,
+            useArtikelStatusQuoPfad: false,
             dynamicBeitragssatz: false
           }
         }
@@ -594,21 +623,21 @@
 
       const controlsDef = [
         { type: "title", label: "Demografie & Arbeitsmarkt" },
-        { key: "geburtenFaktor", label: "Geburtenentwicklung (Faktor)", min: 0.7, max: 1.3, step: 0.05, unit: "", hint: "Wirkt im Zeitraum bis 2060 nur verzögert; kurzfristig kleiner Effekt." },
-        { key: "lebenserwartungTrend", label: "Lebenserwartung (+Jahre/Jahrzehnt)", min: 0.0, max: 3.0, step: 0.1, unit: "", hint: "Höhere Werte erhöhen den Rentenbestand und die Ausgaben." },
-        { key: "nettoZuwanderung", label: "Netto-Zuwanderung p.a.", min: 0, max: 800, step: 10, unit: " Tsd.", hint: "Ein Teil wirkt zeitnah auf Beschäftigung, ein kleiner Teil später auf Renten." },
-        { key: "erwerbsquote", label: "Erwerbsquote", min: 65, max: 85, step: 1, unit: "%", hint: "Hebel auf beitragspflichtige Beschäftigung." },
-        { key: "fteQuote", label: "Arbeitszeit-Faktor (FTE)", min: 70, max: 95, step: 1, unit: "%", hint: "Mehr Teilzeit reduziert das beitragspflichtige Volumen." },
-        { key: "rentenalter", label: "Langfristiges Rentenalter", min: 63, max: 70, step: 0.5, unit: " Jahre", hint: "Im Recht steigt die Regelaltersgrenze schrittweise auf 67." },
+        { key: "geburtenFaktor", label: "Geburtenentwicklung (Faktor)", min: 0.7, max: 1.3, step: 0.05, unit: "", hint: "Hebel: beeinflusst langfristig die künftige Zahl der Beitragszahler (mit Verzögerung). Artikel-Annahme: langfristige Geburtenziffer 1,45 (früher 1,55), mit graduellem Anstieg bis 2035." },
+        { key: "lebenserwartungTrend", label: "Lebenserwartung (+Jahre/Jahrzehnt)", min: 0.0, max: 3.0, step: 0.1, unit: "", hint: "Hebel: längere Lebenserwartung erhöht Rentenbezugsdauer und Ausgaben. Artikel-Annahme: unverändert zur 15. koordinierten Vorausberechnung (am Ende ca. 19,4 Jahre Männer / 22,4 Jahre Frauen ab 65)." },
+        { key: "nettoZuwanderung", label: "Netto-Zuwanderung p.a.", min: 0, max: 800, step: 10, unit: " Tsd.", hint: "Hebel: mehr Zuwanderung stabilisiert kurzfristig den Arbeitsmarkt und später teilweise den Rentenbestand. Artikel-Annahme: langfristig +250 Tsd. Personen pro Jahr." },
+        { key: "erwerbsquote", label: "Erwerbsquote", min: 65, max: 85, step: 1, unit: "%", hint: "Hebel: bestimmt, wie viele Menschen tatsächlich im Arbeitsmarkt sind und Beiträge zahlen. Artikelwert: nicht direkt als Prozentwert genannt; Beschäftigung steigt dort nur um ca. +0,1 % p.a. (2025-2027)." },
+        { key: "fteQuote", label: "Arbeitszeit-Faktor (FTE)", min: 70, max: 95, step: 1, unit: "%", hint: "Hebel: steuert das beitragspflichtige Arbeitsvolumen je Erwerbstätigen. Artikelwert: kein direkter FTE-Wert genannt; der Effekt steckt indirekt in den Beschäftigungs- und Lohnannahmen." },
+        { key: "rentenalter", label: "Langfristiges Rentenalter", min: 63, max: 70, step: 0.5, unit: " Jahre", hint: "Hebel: höheres Rentenalter erhöht Beschäftigung und senkt Rentnerzahl. Artikel-/Rechtsrahmen: Regelaltersgrenze steigt schrittweise auf 67 Jahre." },
         { type: "title", label: "Ökonomie & Finanzierung" },
-        { key: "inflation", label: "Inflation p.a.", min: 0, max: 6, step: 0.1, unit: "%", hint: "Indexiert Löhne, Renten und einen Teil der Zuschüsse/Ausgaben." },
-        { key: "reallohnWachstum", label: "Reallohnwachstum p.a.", min: -1.5, max: 3.0, step: 0.1, unit: "%", hint: "Bestimmt die reale Lohn- und Rentendynamik." },
-        { key: "beitragssatz", label: "Beitragssatz", min: 16, max: 25, step: 0.1, unit: "%", hint: "2026 weiterhin 18,6 %; optional dynamisch berechnen lassen." },
-        { key: "bundeszuschuss", label: "Bundeszuschüsse allg. RV (Startwert)", min: 70, max: 120, step: 1, unit: " Mrd. €", hint: "Startwert 2025 nahe den allgemeinen + zusätzlichen Bundeszuschüssen." },
-        { key: "zuschussWachstum", label: "Wachstum der Zuschüsse p.a.", min: 0, max: 5, step: 0.1, unit: "%", hint: "Verbesserung ggü. der Ursprungsversion: Zuschüsse bleiben nicht nominal starr." },
+        { key: "inflation", label: "Inflation p.a.", min: 0, max: 6, step: 0.1, unit: "%", hint: "Hebel: indexiert nominale Größen (Löhne, Renten, Teile der Ausgaben). Artikelwert: keine eigene Inflationszahl genannt; maßgeblich sind nominale Lohnpfade." },
+        { key: "reallohnWachstum", label: "Reallohnwachstum p.a.", min: -1.5, max: 3.0, step: 0.1, unit: "%", hint: "Hebel: bestimmt die reale Kaufkraftentwicklung der Löhne und Renten. Artikelwert: nicht separat genannt; umgesetzt über nominale Lohnzuwächse 3,6 / 3,3 / 3,2 / 2,9 / 3,0 %." },
+        { key: "beitragssatz", label: "Beitragssatz", min: 16, max: 25, step: 0.1, unit: "%", hint: "Hebel: bestimmt Einnahmen der GRV direkt. Artikel-Annahme (mittlere Variante): 18,6 % bis 2027, 19,8 % (2028), 20,0 % (2029), 20,1 % (2030), 21,2 % (2039)." },
+        { key: "bundeszuschuss", label: "Bundeszuschüsse allg. RV (Startwert)", min: 70, max: 120, step: 1, unit: " Mrd. €", hint: "Hebel: stützt Einnahmen außerhalb von Beiträgen. Artikel nennt für 2025 v.a. Beitragseinnahmen (+5,1 %) und Rücklage; ein exakter Zuschuss-Startwert wird dort nicht als Leitpfad ausgewiesen." },
+        { key: "zuschussWachstum", label: "Wachstum der Zuschüsse p.a.", min: 0, max: 5, step: 0.1, unit: "%", hint: "Hebel: steuert, wie stark der Bundesanteil über die Zeit mitwächst. Artikelwert: kein expliziter jährlicher Prozentsatz genannt, daher modellinterne Annahme." },
         { type: "title", label: "Leistungsniveau" },
-        { key: "rentenniveau", label: "Sicherungsniveau / Haltelinie", min: 43, max: 52, step: 0.5, unit: "%", hint: "Im Modell bis 2031 als Haltelinie wirksam, danach wieder gedämpft." },
-        { key: "nachhaltigkeitsfaktor", label: "Dämpfungs-Intensität nach 2031", min: 0, max: 0.6, step: 0.05, unit: "", hint: "Je höher, desto stärker fällt das Niveau bei ungünstiger Demografie." }
+        { key: "rentenniveau", label: "Rentenniveau (Sicherungsniveau / Haltelinie)", min: 43, max: 52, step: 0.5, unit: "%", hint: "Hebel: legt das Sicherungsniveau vor Steuern fest. Artikel-Annahme: Haltelinie 48 % bleibt bis einschließlich 2031 bestehen." },
+        { key: "nachhaltigkeitsfaktor", label: "Dämpfungs-Intensität nach 2031", min: 0, max: 0.6, step: 0.05, unit: "", hint: "Hebel: übersetzt demografischen Druck in Niveauanpassung nach 2031. Artikelwert: kein expliziter numerischer Faktor, nur der Hinweis auf die Rentenanpassungslogik mit Dämpfungskomponenten." }
       ];
 
       function formatControlValue(v, cfg) {
@@ -621,6 +650,9 @@
         const root = d3.select("#controls");
         root.html("");
         root.append("h1").text("Parametersteuerung");
+        root.append("p")
+          .attr("class", "sub")
+          .text("Jeder Slider zeigt den Hebel auf Einnahmen/Ausgaben und nennt die konkrete Artikel-Annahme für das Status-quo-Szenario (oder markiert, wenn kein exakter Artikelwert genannt ist).");
         root.append("div").attr("class", "group-title").text("Szenarien");
         const presets = root.append("div").attr("class", "scenario-buttons");
         presets.selectAll("button")
@@ -671,6 +703,9 @@
             .on("input", function () {
               if (cfg.key === "beitragssatz" && state.dynamicBeitragssatz) return;
               state[cfg.key] = Number(this.value);
+              if (["beitragssatz", "inflation", "reallohnWachstum", "nettoZuwanderung"].includes(cfg.key)) {
+                state.useArtikelStatusQuoPfad = false;
+              }
               d3.select(`#out-${cfg.key}`).text(formatControlValue(state[cfg.key], cfg));
               renderAll();
             });
@@ -706,17 +741,59 @@
         syncContributionControl();
       }
 
+      function getArtikelNominalWageGrowth(year) {
+        if (year === 2025) return 3.6;
+        if (year === 2026) return 3.3;
+        if (year === 2027) return 3.2;
+        if (year <= 2030) return 2.9;
+        return 3.0;
+      }
+
+      function getArtikelEmploymentGrowth(year) {
+        if (year <= 2027) return 0.1;
+        if (year <= 2030) return 0.05;
+        return 0.0;
+      }
+
+      function getArtikelContributionRate(year) {
+        if (year <= 2027) return 18.6;
+        if (year === 2028) return 19.8;
+        if (year === 2029) return 20.0;
+        if (year === 2030) return 20.1;
+        if (year <= 2039) {
+          const t = (year - 2030) / 9;
+          return 20.1 + t * (21.2 - 20.1);
+        }
+        return 21.2;
+      }
+
       function simulate() {
         const years = d3.range(BASE.startYear, BASE.endYear + 1);
         const paymentRatio = BASE.pensionPayments / BASE.pensioners;
         let reserveEuro = BASE.reserveBn * 1e9;
         let cumulativeBalance = 0;
         let cumulativeMigrationEffect = 0;
+        const targetLevel = state.rentenniveau / 100;
+        let prevOldAgeRatio = BASE.pensioners / BASE.employedHeads;
+        let prevActualLevel = targetLevel;
+        let wageIndex = 1;
+        let employmentIndex = 1;
 
         return years.map((year, i) => {
-          const nominalWageGrowth = state.inflation + state.reallohnWachstum;
+          const nominalWageGrowth = state.useArtikelStatusQuoPfad
+            ? getArtikelNominalWageGrowth(year)
+            : (state.inflation + state.reallohnWachstum);
 
-          const baseEmploymentTrend = (1.0015) ** i;
+          if (i > 0) {
+            wageIndex *= (1 + nominalWageGrowth / 100);
+            if (state.useArtikelStatusQuoPfad) {
+              employmentIndex *= (1 + getArtikelEmploymentGrowth(year) / 100);
+            }
+          }
+
+          const baseEmploymentTrend = state.useArtikelStatusQuoPfad
+            ? employmentIndex
+            : ((1.0015) ** i);
           const erwerbsFactor = (state.erwerbsquote / 77.0) ** 0.85;
           const fteFactor = (state.fteQuote / 85.0) ** 0.8;
           const delayedBirths = 1 + Math.max(0, i - 15) * (state.geburtenFaktor - 1) * 0.01;
@@ -754,25 +831,30 @@
             * migrationPensionFactor;
 
           const pensionPayments = pensioners * paymentRatio;
-          const avgWage = BASE.avgWage * ((1 + nominalWageGrowth / 100) ** i);
+          const avgWage = BASE.avgWage * wageIndex;
           const contributableWageBill = employedHeads * avgWage * BASE.contributionCoverage;
 
-          const targetLevel = state.rentenniveau / 100;
           const oldAgeRatio = pensioners / employedHeads;
-          const startOldAgeRatio = BASE.pensioners / BASE.employedHeads;
 
           let actualLevel = targetLevel;
           if (year > 2031) {
-            const damping = 1 - Math.max(0, oldAgeRatio - startOldAgeRatio) * state.nachhaltigkeitsfaktor * 0.25;
-            actualLevel = Math.max(targetLevel * 0.93, targetLevel * damping);
+            const annualAgingPressure = Math.max(0, oldAgeRatio - prevOldAgeRatio);
+            const annualRelief = Math.max(0, prevOldAgeRatio - oldAgeRatio);
+            const annualDamping = 1 - annualAgingPressure * state.nachhaltigkeitsfaktor * 2.2;
+            const annualRecovery = 1 + annualRelief * (1 - state.nachhaltigkeitsfaktor) * 1.1;
+            const forwardedLevel = prevActualLevel * annualDamping * annualRecovery;
+            actualLevel = Math.min(targetLevel, Math.max(targetLevel * 0.90, forwardedLevel));
           }
 
+          prevOldAgeRatio = oldAgeRatio;
+          prevActualLevel = actualLevel;
+
           const standardPensionMonthly = BASE.standardPensionMonthly
-            * ((1 + nominalWageGrowth / 100) ** i)
+            * wageIndex
             * (actualLevel / targetLevel);
 
           const avgPaymentMonthly = BASE.avgPaymentMonthly
-            * ((1 + nominalWageGrowth / 100) ** i)
+            * wageIndex
             * (actualLevel / targetLevel);
 
           const pensionExpense = pensionPayments * avgPaymentMonthly * 12;
@@ -789,7 +871,7 @@
 
           const effectiveContributionRate = state.dynamicBeitragssatz
             ? Math.max(0, Math.min(35, requiredRate))
-            : state.beitragssatz;
+            : (state.useArtikelStatusQuoPfad ? getArtikelContributionRate(year) : state.beitragssatz);
 
           const contributions = contributableWageBill * (effectiveContributionRate / 100);
           const totalRevenue = contributions + subsidyEuro + miscRevenue;
@@ -849,6 +931,16 @@
         merged.select(".label").text(d => d.label);
         merged.select(".value").text(d => d.value);
         cards.exit().remove();
+      }
+
+      function renderDataBasisBox() {
+        const rows = [];
+
+        d3.select("#data-basis-list")
+          .selectAll("li")
+          .data(rows)
+          .join("li")
+          .text(d => d);
       }
 
       function renderKPIs(data) {
@@ -1284,6 +1376,7 @@
       function renderAll() {
         const data = simulate();
         renderQualityBox();
+        renderDataBasisBox();
         renderKPIs(data);
 
         drawLineChart(
